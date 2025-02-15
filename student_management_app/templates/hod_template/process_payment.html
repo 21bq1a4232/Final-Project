@@ -1,0 +1,260 @@
+{% extends 'hod_template/base_template.html' %}
+
+{% block page_title %}
+    Process Payment
+{% endblock page_title %}
+
+{% block main_content %}
+<section class="content">
+    <div class="container-fluid">
+        <div class="row">
+            <div class="col-md-6">
+                <div class="card">
+                    <div class="card-header">
+                        <h3 class="card-title">Student: {{ student.admin.first_name }} {{ student.admin.last_name }}</h3>
+                    </div>
+                    <div class="card-body">
+                        <p>Total Fees: {{ student_fees.total_fee }}</p>
+                        <p>Paid Fees: {{ paid.paid_fees }}</p>
+                        <p>Due Fees: {{ due_fees }}</p>
+
+                        <form method="post" action="{% url 'process_payment' student.id %}">
+                            {% csrf_token %}
+                            <div class="form-group">
+                                <label for="amount_paid">Amount to Pay:</label>
+                                <input type="number" id="amount_paid" name="amount_paid" class="form-control" step="0.01" min="0" required>
+                            </div>
+                            <button type="submit" class="btn btn-primary">Pay</button>
+                        </form>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </div>
+</section>
+{% endblock main_content %}
+
+{% comment %} {% extends 'hod_template/base_template.html' %}
+
+{% block page_title %}
+    Process Payment
+{% endblock page_title %}
+
+{% block main_content %}
+<section class="content">
+    <div class="container-fluid">
+        <div class="row">
+            <div class="col-md-6">
+                <div class="card">
+                    <div class="card-header">
+                        <h3 class="card-title">Student: {{ student.admin.first_name }} {{ student.admin.last_name }}</h3>
+                    </div>
+                    <div class="card-body">
+                        <p>Total Fees: {{ student_fees.total_fees }}</p>
+                        <p>Paid Fees: {{ student_fees.paid_fees }}</p>
+                        <p>Due Fees: {{ due_fees }}</p>
+
+                        <form method="post" action="{% url 'process_payment' student.id %}">
+                            {% csrf_token %}
+                            <div class="form-group">
+                                <label for="amount_paid">Amount to Pay:</label>
+                                <input type="number" id="amount_paid" name="amount_paid" class="form-control" step="0.01" min="0" required>
+                            </div>
+                            <button type="submit" class="btn btn-primary">Pay</button>
+                        </form>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </div>
+</section>
+{% endblock main_content %} {% endcomment %}
+
+{% comment %} {% extends 'hod_template/base_template.html' %}
+
+{% block page_title %}
+    Process Payment
+{% endblock page_title %}
+
+{% block main_content %}
+<section class="content">
+    <div class="container-fluid">
+        <div class="row">
+            <div class="col-md-6">
+                <div class="card">
+                    <div class="card-header">
+                        <h3 class="card-title">Student: {{ student.admin.first_name }} {{ student.admin.last_name }}</h3>
+                    </div>
+                    <div class="card-body">
+                        <p>Total Fees: {{ student_fees.total_fees }}</p>
+                        <p>Paid Fees: {{ student_fees.paid_fees }}</p>
+                        <p>Due Fees: {{ student_fees.due_fees }}</p>
+
+                        <form method="post" action="{% url 'process_payment' student.id %}">
+                            {% csrf_token %}
+                            <div class="form-group">
+                                <label for="amount_paid">Amount to Pay:</label>
+                                <input type="number" id="amount_paid" name="amount_paid" class="form-control" step="0.01" min="0" required>
+                            </div>
+                            <button type="submit" class="btn btn-primary">Pay</button>
+                        </form>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </div>
+</section>
+{% endblock main_content %} {% endcomment %}
+
+{% comment %} <!-- hod_template/process_payment.html -->
+{% extends 'hod_template/base_template.html' %}
+
+{% block page_title %}
+    Process Payment
+{% endblock page_title %}
+
+{% block main_content %}
+<section class="content">
+    <div class="container-fluid">
+        <div class="row">
+            <div class="col-md-6">
+                <div class="card">
+                    <div class="card-header">
+                        <h3 class="card-title">Student: {{ student.admin.first_name }} {{ student.admin.last_name }}</h3>
+                    </div>
+                    <div class="card-body">
+                        <p>Total Fees: {{ student_fees.total_fees }}</p>
+                        <p>Paid Fees: {{ student_fees.paid_fees }}</p>
+                        <p>Due Fees: {{ student_fees.due_fees }}</p>
+
+                        <form method="post" action="{% url 'process_payment' student.id %}">
+                            {% csrf_token %}
+                            <div class="form-group">
+                                <label for="amount_paid">Amount to Pay:</label>
+                                <input type="number" id="amount_paid" name="amount_paid" class="form-control" step="0.01" min="0" required>
+                            </div>
+                            <button type="submit" class="btn btn-primary">Pay</button>
+                        </form>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </div>
+</section>
+{% endblock main_content %} {% endcomment %}
+
+{% comment %} {% extends 'hod_template/base_template.html' %}
+
+{% block page_title %}
+    Process Payment
+{% endblock page_title %}
+
+{% block main_content %}
+<section class="content">
+    <div class="container-fluid">
+        <div class="row">
+            <div class="col-md-6 offset-md-3">
+                <div class="card">
+                    <div class="card-header">
+                        <h3 class="card-title">Process Payment for {{ student.admin.first_name }} {{ student.admin.last_name }}</h3>
+                    </div>
+                    <div class="card-body">
+                        <p><strong>Total Fees:</strong> {{ total_fees }}</p>
+                        <p><strong>Paid Fees:</strong> {{ paid_fees }}</p>
+                        <p><strong>Due Fees:</strong> <span style="color: red;">{{ due_fees }}</span></p>
+
+                        <form method="POST" action="{% url 'process_payment' student.id %}">
+                            {% csrf_token %}
+                            <div class="form-group">
+                                <label for="amount_paid">Amount to Pay:</label>
+                                <input type="number" class="form-control" id="amount_paid" name="amount_paid" required min="1">
+                            </div>
+                            {% if due_fees > 0 %}
+                                <button type="submit" class="btn btn-primary">Submit Payment</button>
+                            {% else %}
+                                <p>No Due</p>
+                            {% endif %}
+                        </form>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </div>
+</section>
+{% endblock main_content %} {% endcomment %}
+
+{% comment %} {% extends 'hod_template/base_template.html' %}
+
+{% block page_title %}
+    Process Payment
+{% endblock page_title %}
+
+{% block main_content %}
+<section class="content">
+    <div class="container-fluid">
+        <div class="row">
+            <div class="col-md-6 offset-md-3">
+                <div class="card">
+                    <div class="card-header">
+                        <h3 class="card-title">Process Payment for {{ student.admin.first_name }} {{ student.admin.last_name }}</h3>
+                    </div>
+                    <div class="card-body">
+                        <p><strong>Total Fees:</strong> {{ student_fees.total_fees }}</p>
+                        <p><strong>Paid Fees:</strong> {{ student_fees.paid_fees }}</p>
+                        <p><strong>Due Fees:</strong> <span style="color:red;">{{ student_fees.total_fees|add:-student_fees.paid_fees }}</span></p>
+
+                        <form method="POST" action="{% url 'process_payment' student.id %}">
+                            {% csrf_token %}
+                            <div class="form-group">
+                                <label for="amount_paid">Amount to Pay:</label>
+                                <input type="number" class="form-control" id="amount_paid" name="amount_paid" required>
+                            </div>
+                            {% if student_fees.total_fees|add:-student_fees.paid_fees > 0 %}
+                                <button type="submit" class="btn btn-primary">Submit Payment</button>
+                            {% else %}
+                                <p>No Due</p>
+                            {% endif %}
+                        </form>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </div>
+</section>
+{% endblock main_content %} {% endcomment %}
+
+{% comment %} {% extends 'hod_template/base_template.html' %}
+
+{% block page_title %}
+    Process Payment
+{% endblock page_title %}
+
+{% block main_content %}
+<section class="content">
+    <div class="container-fluid">
+        <div class="row">
+            <div class="col-md-6 offset-md-3">
+                <div class="card">
+                    <div class="card-header">
+                        <h3 class="card-title">Process Payment for {{ student.admin.first_name }} {{ student.admin.last_name }}</h3>
+                    </div>
+                    <div class="card-body">
+                        <p><strong>Total Fees:</strong> {{ total_fees }}</p>
+                        <p><strong>Paid Fees:</strong> {{ paid_fees }}</p>
+                        <p><strong>Due Fees:</strong> <span style="color: red;">{{ due_fees }}</span></p>
+
+                        <form method="POST" action="{% url 'process_payment' student.id %}">
+                            {% csrf_token %}
+                            <div class="form-group">
+                                <label for="amount_paid">Amount to Pay:</label>
+                                <input type="number" class="form-control" id="amount_paid" name="amount_paid" required min="1" max="{{ due_fees }}">
+                            </div>
+                            <button type="submit" class="btn btn-primary">Submit Payment</button>
+                        </form>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </div>
+</section>
+{% endblock main_content %} {% endcomment %}
