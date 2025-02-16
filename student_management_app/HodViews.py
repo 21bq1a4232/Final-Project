@@ -13,7 +13,6 @@ from .models import CustomUser, Staffs, Courses, Subjects, Students, SessionYear
 
 
 def admin_home(request):
-    print("apun sbka baap h")
     print(request.user.user_type)
     all_student_count = Students.objects.all().count()
     subject_count = Subjects.objects.all().count()
@@ -335,7 +334,11 @@ from django.core.files.storage import FileSystemStorage
 from django.http import HttpResponse
 from .models import CustomUser, Courses, Students, SessionYearModel, FeesStructure,StudentFees
 from .forms import AddStudentForm, EditStudentForm,FeesStructure
-
+import cv2
+import face_recognition
+import numpy as np
+import pickle
+import base64
 def add_student(request):
     form = AddStudentForm()
     context = {
@@ -351,9 +354,9 @@ def add_student_save(request):
         return redirect('add_student')
     else:
         form = AddStudentForm(request.POST, request.FILES)
-        print("Form data:",form)
+        # print("Form data:",form)
         if form.is_valid():
-            try:
+            # try:
                 first_name = form.cleaned_data['first_name']
                 last_name = form.cleaned_data['last_name']
                 username = form.cleaned_data['username']
@@ -365,6 +368,7 @@ def add_student_save(request):
                 gender = form.cleaned_data['gender']
                 fees_structure = form.cleaned_data['fees_structure']
                 face_data = form.cleaned_data['face_data']
+                print("this is the fee strcuture",fees_structure.id)
                 if request.FILES.get('profile_pic'):
                     profile_pic = request.FILES['profile_pic']
                     fs = FileSystemStorage()
@@ -372,20 +376,40 @@ def add_student_save(request):
                     profile_pic_url = fs.url(filename)
                 else:
                     profile_pic_url = None
-
+                    fee = FeesStructure.objects.get(id=fees_structure.id)
                     user = CustomUser.objects.create_user(username=username, password=password, email=email, first_name=first_name, last_name=last_name, user_type=3)
                     user.students.address = address
                     user.students.course_id = Courses.objects.get(id=course_id)
                     user.students.session_year_id = SessionYearModel.objects.get(id=session_year_id)
                     user.students.gender = gender
                     user.students.profile_pic = profile_pic_url
-                    user.students.fees_structure = fees_structure
+                    user.students.fees_structure = fee
+                    user.students.default_fees = fee.total_fee
+                    user.is_face_registered = True
                     user.save()
+                    face_data = face_data.split(',')[1]
+                    image_bytes = base64.b64decode(face_data)
+                    np_arr = np.frombuffer(image_bytes, np.uint8)
+                    frame = cv2.imdecode(np_arr, cv2.IMREAD_COLOR)
+                    rgb_frame = cv2.cvtColor(frame, cv2.COLOR_BGR2RGB)
+
+                    # Detect faces
+                    face_locations = face_recognition.face_locations(rgb_frame)
+                    face_encodings = face_recognition.face_encodings(rgb_frame, face_locations)
+                    existing_faces = FaceEncoding.objects.all()
+                    for face in existing_faces:
+                        existing_encoding = pickle.loads(face.encoding)
+                        matches = face_recognition.compare_faces([existing_encoding], face_encodings[0], tolerance=0.1)
+                        if True in matches:
+                            messages.error(request, "Failed to Add Student: Face already exists in database")
+                            return redirect('add_student')
+                    FaceEncoding.objects.create(user=user, encoding=pickle.dumps(face_encodings[0]))
+                    print("Registration successful!  Please log in.", user.username)
                     messages.success(request, "Student Added Successfully!")
                     return redirect('add_student')
-            except Exception as e:
-                messages.error(request, f"Failed to Add Student: {str(e)}")
-                return redirect('add_student')
+            # except Exception as e:
+            #     messages.error(request, f"Failed to Add Student: {str(e)}")
+            #     return redirect('add_student')
         else:
             messages.error(request, "Form is not valid. Please check the entries.")
             return redirect('add_student')

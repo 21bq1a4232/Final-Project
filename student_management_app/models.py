@@ -309,7 +309,7 @@ from django.contrib.auth.models import AbstractUser
 
 class StudentFees(models.Model):
     student = models.OneToOneField(Students, on_delete=models.CASCADE)
-    total_fees = models.ForeignKey(Courses, on_delete=models.CASCADE,null=True,blank=True)
+    total_fees = models.DecimalField(max_digits=10, decimal_places=2, null=True, blank=True)  # Change ForeignKey to DecimalField
     paid_fees = models.IntegerField(default=0)
     date_paid = models.DateTimeField(auto_now_add=True)
 

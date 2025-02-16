@@ -233,7 +233,7 @@ def view_fee_details(request, student_id):
     try:
         student_fees = StudentFees.objects.get(student=student)
         paid_fees = student_fees.paid_fees
-        total_fees = student_fees.total_fees.total_fee  # Access the total_fee from FeesStructure
+        total_fees = student.default_fees  # Access the total_fee from FeesStructure
     except StudentFees.DoesNotExist:
         student_fees = None
         paid_fees = 0
