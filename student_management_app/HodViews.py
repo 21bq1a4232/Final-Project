@@ -339,7 +339,8 @@ from .forms import AddStudentForm, EditStudentForm,FeesStructure
 def add_student(request):
     form = AddStudentForm()
     context = {
-        "form": form
+        "form": form,
+        "enable_face_capture": True
     }
     return render(request, 'hod_template/add_student_template.html', context)
 
@@ -363,7 +364,7 @@ def add_student_save(request):
                 course_id = form.cleaned_data['course_id']
                 gender = form.cleaned_data['gender']
                 fees_structure = form.cleaned_data['fees_structure']
-
+                face_data = form.cleaned_data['face_data']
                 if request.FILES.get('profile_pic'):
                     profile_pic = request.FILES['profile_pic']
                     fs = FileSystemStorage()

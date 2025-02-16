@@ -21,6 +21,8 @@ class AddStudentForm(forms.Form):
     username = forms.CharField(label="Username", max_length=50, widget=forms.TextInput(attrs={"class":"form-control"}))
     address = forms.CharField(label="Address", max_length=50, widget=forms.TextInput(attrs={"class":"form-control"}))
 
+    face_data = forms.CharField(label="Face Data", required=True,widget=forms.HiddenInput(attrs={"class":"form-control"}))
+
     #For Displaying Courses
     try:
         courses = Courses.objects.all()
