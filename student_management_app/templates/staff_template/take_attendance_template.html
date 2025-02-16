@@ -7,7 +7,236 @@ Take Attendance
 {% block main_content %}
 
 {% load static %}
+<script defer src="https://cdn.jsdelivr.net/npm/face-api.js@0.22.2/dist/face-api.min.js"></script>
+<link href="https://fonts.googleapis.com/css2?family=Roboto:wght@300;400;500;700&display=swap" rel="stylesheet">
+<link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/animate.css/4.1.1/animate.min.css">
+<style>
+    .face-quality {
+        display: flex;
+        justify-content: space-between;
+        margin-top: 1rem;
+    }
 
+    .quality-indicator {
+        flex: 1;
+        margin: 0 5px;
+        height: 4px;
+        background: rgba(255, 255, 255, 0.2);
+        border-radius: 2px;
+    }
+
+    .quality-indicator.active {
+        background: var(--primary-color);
+    }
+
+    .capture-feedback {
+        position: absolute;
+        top: 45rem;
+        right: 670px;
+        background: rgba(0, 0, 0, 0.7);
+        padding: 0.5rem 1rem;
+        border-radius: 20px;
+        display: none;
+        margin: 1em 1em;
+        text-align: center;
+        align-items: center;
+    }
+
+    .capture-feedback.good {
+        background: rgba(76, 175, 80, 0.7);
+    }
+
+    .capture-feedback.bad {
+        background: rgba(244, 67, 54, 0.7);
+    }
+
+    @keyframes pulse {
+        0% { transform: scale(1); }
+        50% { transform: scale(1.1); }
+        100% { transform: scale(1); }
+    }
+
+    .success-animation {
+        width: 100px;
+        height: 100px;
+        margin: 0 auto;
+    }
+
+    .registration-complete {
+        text-align: center;
+        animation: fadeIn 0.5s;
+    }
+    :root {
+        --primary-color: #2196f3;
+        --secondary-color: #f50057;
+        --background-dark: #0a1929;
+        --paper-dark: #1a2027;
+    }
+
+ 
+    .container {
+        width: 100%;
+        max-width: 600px;
+        padding: 20px;
+    }
+
+    .title {
+        text-align: center;
+        font-size: 2.5rem;
+        font-weight: 700;
+        margin-bottom: 2rem;
+        background: linear-gradient(45deg, var(--primary-color), var(--secondary-color));
+        -webkit-background-clip: text;
+        -webkit-text-fill-color: transparent;
+        animation: fadeInDown 1s;
+    }
+
+    .camera-container {
+        position: relative;
+        background: rgba(26, 32, 39, 0.8);
+        backdrop-filter: blur(10px);
+        border-radius: 20px;
+        padding: 1rem;
+        box-shadow: 0 8px 32px 0 rgba(31, 38, 135, 0.37);
+        animation: fadeIn 1s;
+        width: 400px;
+        height: 400px;
+    }
+
+    #video {
+        width: 100%;
+        border-radius: 15px;
+        transform: scaleX(-1);
+    }
+
+    .face-overlay {
+        position: absolute;
+        top: 50%;
+        left: 50%;
+        transform: translate(-50%, -50%);
+        width: 200px;
+        height: 250px;
+        border: 3px solid var(--primary-color);
+        border-radius: 100px 100px 60px 60px;
+        pointer-events: none;
+    }
+
+    .scan-line {
+        position: absolute;
+        width: 100%;
+        height: 2px;
+        background: var(--primary-color);
+        opacity: 0.8;
+        animation: scan 2s linear infinite;
+    }
+
+    .detection-box {
+        position: absolute;
+        border: 2px solid #4CAF50;
+        transition: all 0.3s ease;
+    }
+
+    .status-container {
+        margin-top: 1rem;
+        text-align: center;
+    }
+
+    .status {
+        padding: 1rem;
+        border-radius: 10px;
+        margin-bottom: 1rem;
+        display: none;
+    }
+
+    .status.error {
+        background: #f44336;
+        animation: shake 0.5s;
+    }
+
+    .status.success {
+        background: #4CAF50;
+        animation: bounceIn 0.5s;
+    }
+
+    .loading {
+        display: none;
+        justify-content: center;
+        margin: 1rem 0;
+    }
+
+    .action-button {
+        width: 100%;
+        padding: 1rem;
+        border: none;
+        border-radius: 10px;
+        background: linear-gradient(45deg, var(--primary-color), var(--secondary-color));
+        color: white;
+        font-size: 1.1rem;
+        cursor: pointer;
+        transition: transform 0.3s ease;
+    }
+
+    .action-button:hover {
+        transform: translateY(-2px);
+    }
+
+    .action-button:disabled {
+        opacity: 0.7;
+        cursor: not-allowed;
+    }
+
+    @keyframes scan {
+        0% { top: 0; }
+        100% { top: 100%; }
+    }
+
+    @keyframes shake {
+        0%, 100% { transform: translateX(0); }
+        25% { transform: translateX(-10px); }
+        75% { transform: translateX(10px); }
+    }
+
+    /* Face detection indicators */
+    .detection-indicator {
+        position: absolute;
+        width: 10px;
+        height: 10px;
+        background: #4CAF50;
+        border-radius: 50%;
+        transition: all 0.3s ease;
+    }
+
+    .detection-indicator.top-left { top: -5px; left: -5px; }
+    .detection-indicator.top-right { top: -5px; right: -5px; }
+    .detection-indicator.bottom-left { bottom: -5px; left: -5px; }
+    .detection-indicator.bottom-right { bottom: -5px; right: -5px; }
+
+    /* Loading animation */
+    .loader {
+        width: 48px;
+        height: 48px;
+        border: 5px solid #FFF;
+        border-bottom-color: var(--primary-color);
+        border-radius: 50%;
+        display: inline-block;
+        box-sizing: border-box;
+        animation: rotation 1s linear infinite;
+    }
+
+    @keyframes rotation {
+        0% { transform: rotate(0deg); }
+        100% { transform: rotate(360deg); }
+    }
+    .form-group .face-capture-guide {
+        margin-bottom: 10px;
+        font-size: 1.2rem;
+        font-weight: 500;
+    }
+    .form-group .camera-container{
+        margin-left: 550px;
+    }
+    
+</style>
 <section class="content">
 	<div class="container-fluid">
 		
@@ -71,17 +300,49 @@ Take Attendance
 					
 					
 					</div>
+                    <div class='form-group'>
+                        <label>Attendance Date: </label>
+                        <input type='date' name='attendance_date' id='attendance_date' class='form-control' />
+                    </div>
+                    <div class='form-group'>
+                        <div class='row'></div>
 					<!-- /.card-body -->
 					
-					<div class="card-footer">
+					<!-- <div class="card-footer">
 						<button type="button" class="btn btn-primary" id="fetch_student">Fetch Student</button>
-					</div>
+					</div> -->
 					
 					{% comment %} Displaying Students Here {% endcomment %}
-					
+                    {% if enable_face_capture %}
+                            <div class="form-group">
+                                <div class="Dummy" style="height: 550px;">
+                                    <div class="face-capture-guide">
+                                        Position your face within the frame
+                                        <div class="capture-feedback">Perfect! Hold still...</div>
+                                    </div>
+                                    <label>Face Capture</label>
+                                    <div class="camera-container">
+                                        <video id="video" autoplay playsinline></video>
+                                        <div class="face-overlay">
+                                            <div class="scan-line"></div>
+                                            <div class="detection-indicator top-left"></div>
+                                            <div class="detection-indicator top-right"></div>
+                                            <div class="detection-indicator bottom-left"></div>
+                                            <div class="detection-indicator bottom-right"></div>
+                                        </div>
+                                        <button type="button" class="action-button" id="captureBtn" onclick="captureFace()">Capture Face</button>
+                                    </div>
+                                    <div>
+                                        
+                                        <input type="hidden" id="faceData" name="face_data">
+                                    </div>
+                                </div>
+                            </div>
+
+                            {% endif %}
 					<div class="card-footer" id="student_data">
 					</div>
-				
+                    <button id='save_attendance' class='btn btn-success' type='button'>Save Attendance Data</button>
 				</div>
 				<!-- /.card -->
 			
@@ -94,45 +355,147 @@ Take Attendance
 {% endblock main_content %}
 
 {% block custom_js %}
-
+{% if enable_face_capture %}
+                    <script>
+                        document.addEventListener('DOMContentLoaded', () => {
+                            loadFaceAPIModels().then(startCamera).then(startFaceDetection);;
+                        
+                            let faceDetectionInterval;
+                                let capturedImage = null;
+                                let modelsLoaded = false;
+                                
+                                const faceDataInput = document.getElementById('faceData');
+                                const feedback = document.querySelector('.capture-feedback');
+                                // Load face-api.js models from static directory
+                                async function loadFaceAPIModels() {
+                                    const MODEL_URL = '/static/models';
+                                    console.log("Loading Face API models...", MODEL_URL);
+                                    try {
+                                        console.log("Loading Face API models...");
+                                        await faceapi.nets.tinyFaceDetector.loadFromUri(MODEL_URL);
+                                        await faceapi.nets.faceLandmark68Net.loadFromUri(MODEL_URL);
+                                        await faceapi.nets.faceRecognitionNet.loadFromUri(MODEL_URL);
+                                        console.log("Face API models loaded successfully.");
+                                        modelsLoaded = true;
+                                    } catch (error) {
+                                        console.error("Error loading Face API models:", error);
+                                        alert("Face detection models failed to load. Please refresh the page.");
+                                    }
+                                }
+                                function startFaceDetection() {
+                                    console.log("Starting face detection...");
+                                    faceDetectionInterval = setInterval(async () => {
+                                        if (!modelsLoaded) return;
+                            
+                                        const detections = await faceapi.detectSingleFace(video, new faceapi.TinyFaceDetectorOptions())
+                                            .withFaceLandmarks();
+                            
+                                        if (detections) {
+                                            updateFeedback("Face detected! Hold still...", "good");
+                                            captureBtn.disabled = false;
+                                        } else {
+                                            updateFeedback("No face detected. Please adjust your position.", "bad");
+                                            captureBtn.disabled = true;
+                                        }
+                                    }, 200);
+                                }
+                                function updateFeedback(message, type) {
+                                feedback.textContent = message;
+                                feedback.className = `capture-feedback ${type}`;
+                                feedback.style.display = 'block';
+                            }
+                            async function startCamera() {
+                                console.log("Attempting to start camera...");
+                                
+                                try {
+                                    // Request camera access
+                                    const stream = await navigator.mediaDevices.getUserMedia({
+                                        video: { width: 640, height: 480, facingMode: 'user' }
+                                    });
+                            
+                                    // Assign the stream to the video element
+                                    const video = document.getElementById('video');
+                                    video.srcObject = stream;
+                            
+                                    // Ensure video starts playing
+                                    video.onloadedmetadata = () => {
+                                        video.play();
+                                        console.log("Camera started successfully.");
+                                    };
+                            
+                                } catch (error) {
+                                    console.error("Camera access error:", error);
+                                    alert("⚠️ Camera access denied. Please allow camera permissions and refresh the page.");
+                                }
+                            }
+                        
+                            async function captureFace() {
+                                const canvas = document.createElement('canvas');
+                                canvas.width = video.videoWidth;
+                                canvas.height = video.videoHeight;
+                                const context = canvas.getContext('2d');
+                                context.drawImage(video, 0, 0, canvas.width, canvas.height);
+                                
+                                capturedImage = canvas.toDataURL('image/jpeg'); // Convert to Base64
+                                faceDataInput.value = capturedImage; // Store in hidden input for submission
+                                console.log("Face captured and stored.");
+                        
+                                // Disable capture button and enable Next button
+                                captureBtn.disabled = true;
+                                
+                                // formData.faceData = capturedImage;
+                            }
+                            window.captureFace = captureFace;
+                            // Stop face detection when leaving step 2
+                            function stopFaceDetection() {
+                                if (faceDetectionInterval) {
+                                    clearInterval(faceDetectionInterval);
+                                    console.log("Face detection stopped.");
+                                }
+                            }
+                        
+                            
+                        });
+                        </script>
+                        {% endif %}
 <script>
     $(document).ready(function(){
-        $("#fetch_student").click(function(){
+        //$("#fetch_student").click(function(){
 
 
 
-            var subject=$("#subject").val()
-            var session_year=$("#session_year").val()
+            // var subject=$("#subject").val()
+            // var session_year=$("#session_year").val()
 
-            $.ajax({
-                url:'{% url 'get_students' %}',
-                type:'POST',
-                data:{subject:subject, session_year:session_year},
-            })
+            // $.ajax({
+            //     url:'{% url 'get_students' %}',
+            //     type:'POST',
+            //     data:{subject:subject, session_year:session_year},
+            // })
 
             
-            .done(function(response){
-                var json_data=JSON.parse(response);
-                console.log(json_data)
+            // .done(function(response){
+            //     var json_data=JSON.parse(response);
+            //     console.log(json_data)
 
-                var div_data="<div class='form-group'><label>Attendance Date: </label> <input type='date' name='attendance_date' id='attendance_date' class='form-control' /></div>"
-                div_data+="<div class='form-group'><div class='row'>"
+            //     var div_data="<div class='form-group'><label>Attendance Date: </label> <input type='date' name='attendance_date' id='attendance_date' class='form-control' /></div>"
+            //     div_data+="<div class='form-group'><div class='row'>"
 
-                for(key in json_data)
-                {
-                    div_data+="<div class='col-lg-2'><div class='form-check'><input type='checkbox' checked='checked' name='student_data[]' value='"+ json_data[key]['id'] +"' />  <label class='form-check-label'>"+ json_data[key]['name']+" </label></div></div> ";
+            //     for(key in json_data)
+            //     {
+            //         div_data+="<div class='col-lg-2'><div class='form-check'><input type='checkbox' checked='checked' name='student_data[]' value='"+ json_data[key]['id'] +"' />  <label class='form-check-label'>"+ json_data[key]['name']+" </label></div></div> ";
 
-                }
-                div_data+="</div></div>";
-                div_data+="<div class='form-group'>";
-                div_data+="<button id='save_attendance' class='btn btn-success' type='button'>Save Attendance Data</button>";
-                div_data+="</div>";
-                $("#student_data").html(div_data);
+            //     }
+            //     div_data+="</div></div>";
+            //     div_data+="<div class='form-group'>";
+            //     div_data+="<button id='save_attendance' class='btn btn-success' type='button'>Save Attendance Data</button>";
+            //     div_data+="</div>";
+            //     $("#student_data").html(div_data);
 
-            })
-            .fail(function(){
-                alert("Error in Fetching Students.")
-            })
+            // })
+            // .fail(function(){
+            //     alert("Error in Fetching Students.")
+            //     })
 
 
             $(document).on("click", "#save_attendance", function(){
@@ -141,7 +504,7 @@ Take Attendance
                 $(this).attr("disabled", "disabled")
                 $(this).text("Saving Attendance Data...")
 
-
+                console.log("Save Attendance Data Clicked")
                 var student_data=$("input[name='student_data[]'").map(function(){ 
                         if($(this).is(":checked")){
                             return {"id":$(this).val(), "status":1}; // Getting ID and Value of Students
@@ -154,41 +517,33 @@ Take Attendance
                 var attendance_date=$("#attendance_date").val();
                 var subject_id=$("#subject").val();
                 var session_year_id=$("#session_year").val();
-
-
-                student_data = JSON.stringify(student_data)
+                var face_data=$("#faceData").val();
 
 
 
                 $.ajax({
                     url:'{% url 'save_attendance_data' %}',
                     type:'POST',
-                    data:{student_ids:student_data, attendance_date:attendance_date, subject_id:subject_id, session_year_id:session_year_id},
+                    contentType:'application/json',
+                    data: JSON.stringify({
+                        attendance_date: attendance_date,
+                        subject_id: subject_id,
+                        session_year_id: session_year_id,
+                        face_data: face_data
+                    }),
                 })
                 
                 
                 .done(function(response){
-                    
-                    if(response=="OK")
-                    {
-                        alert("Attendance Saved!")
-                    }
-                    else
-                    {
-                        alert("Failed to Save Attendance!")
-                    }
-                    location.reload()
-                    
-
+                    alert(response.message);  // Show actual message from Django
+                    location.reload();
                 })
 
-                .fail(function(){
-                    alert("Error in Saving Students Attendance Data.")
-                })
+                .fail(function(xhr, status, error){
+                    alert("Error: " + xhr.responseJSON.message);
+                });
 
             })
-
-        })
     })
 </script>
 {% endblock custom_js %}

@@ -8,7 +8,7 @@ from django.core import serializers
 import json
 
 
-from .models import CustomUser, Staffs, Courses, Subjects, Students, SessionYearModel, Attendance, AttendanceReport, LeaveReportStaff, FeedBackStaffs, StudentResult,TimeTable
+from .models import CustomUser, FaceEncoding, Staffs, Courses, Subjects, Students, SessionYearModel, Attendance, AttendanceReport, LeaveReportStaff, FeedBackStaffs, StudentResult,TimeTable
 
 
 def staff_home(request):
@@ -36,8 +36,8 @@ def staff_home(request):
     # # Fetch All Attendance Count
     attendance_count = Attendance.objects.filter(subject_id__in=subjects).count()
     # # Fetch    All Approve Leave
-    # print(request.user)
-    print(request.user.user_type)
+    print(request.user)
+    print("this is the user",request.user.user_type)
     staff = Staffs.objects.get(admin=request.user.id)
     leave_count = LeaveReportStaff.objects.filter(staff_id=staff.id, leave_status=1).count()
 
@@ -78,14 +78,18 @@ def staff_home(request):
 def staff_take_attendance(request):
     subjects = Subjects.objects.filter(staff_id=request.user.id)
     session_years = SessionYearModel.objects.all()
+    print("this is session_years",session_years)
+    print("this is subjects",subjects)
     context = {
         "subjects": subjects,
-        "session_years": session_years
+        "session_years": session_years,
+        "enable_face_capture": True
     }
     return render(request, "staff_template/take_attendance_template.html", context)
 
 
 def staff_apply_leave(request):
+
     print(request.user.id)
     staff_obj = Staffs.objects.get(admin=request.user.id)
     leave_data = LeaveReportStaff.objects.filter(staff_id=staff_obj)
@@ -170,42 +174,77 @@ def get_students(request):
 
 
 
-
+import cv2
+import face_recognition
+import numpy as np
+import pickle
+import base64
 @csrf_exempt
 def save_attendance_data(request):
-    # Get Values from Staf Take Attendance form via AJAX (JavaScript)
-    # Use getlist to access HTML Array/List Input Data
-    student_ids = request.POST.get("student_ids")
-    subject_id = request.POST.get("subject_id")
-    attendance_date = request.POST.get("attendance_date")
-    session_year_id = request.POST.get("session_year_id")
+    if request.method == "POST":
+        try:
+            # Get Data from Request
+            data = json.loads(request.body)
+            face_data = data.get("face_data")
+            subject_id = data.get("subject_id")
+            attendance_date = data.get("attendance_date")
+            session_year_id = data.get("session_year_id")
 
-    subject_model = Subjects.objects.get(id=subject_id)
-    session_year_model = SessionYearModel.objects.get(id=session_year_id)
-    json_student = json.loads(student_ids)
-    print("JSON STUDENT",json_student)
-    # print(dict_student[0]['id'])
+            # Decode the Base64 Image
+            face_data = face_data.split(',')[1]  # Remove Base64 header
+            image_bytes = base64.b64decode(face_data)
+            np_arr = np.frombuffer(image_bytes, np.uint8)
+            frame = cv2.imdecode(np_arr, cv2.IMREAD_COLOR)
+            rgb_frame = cv2.cvtColor(frame, cv2.COLOR_BGR2RGB)
+            # print("this is rgb_frame",rgb_frame)
+            # Detect Faces and Get Encodings
+            face_locations = face_recognition.face_locations(rgb_frame)
+            face_encodings = face_recognition.face_encodings(rgb_frame, face_locations)
 
-    print(student_ids)
-    try:
-        # First Attendance Data is Saved on Attendance Model
-        attendance = Attendance(subject_id=subject_model, attendance_date=attendance_date, session_year_id=session_year_model)
-        attendance.save()
-        print("For looop")
+            if not face_encodings:
+                return JsonResponse({"message": "No face detected!"}, status=400)
 
-        for stud in json_student:
-            print("In for loop")
-            # Attendance of Individual Student saved on AttendanceReport Model
-            student = Students.objects.get(admin=stud['id'])
-            attendance_report = AttendanceReport(student_id=student, attendance_id=attendance, status=stud['status'])
-            print(attendance_report)    
-            attendance_report.save()
-        print(attendance_report)
-        return HttpResponse("OK")
-    except:
-        return HttpResponse("Error")
+            # Get all students and their face encodings from DB
+            students = Students.objects.all()
+            recognized_students = []
+            existing_faces = FaceEncoding.objects.all()
+            for face in existing_faces:
+                existing_encoding = pickle.loads(face.encoding)
+                matches = face_recognition.compare_faces([existing_encoding], face_encodings[0], tolerance=0.5)
+                # print("this is matches",matches)
+                for match in matches:
+                    if match:  # If match found
+                        recognized_students.append(face.user.id)
 
+            # print("this is students",recognized_students)
+            if not recognized_students:
+                return JsonResponse({"message": "Face not recognized!"}, status=400)
 
+            # Fetch Subject and Session Year Models
+            subject_model = Subjects.objects.get(id=subject_id)
+            session_year_model = SessionYearModel.objects.get(id=session_year_id)
+            # print("this is subject_model", subject_model)
+            # print("this is session_year_model", session_year_model)
+            # print("this is attendance_date", attendance_date)
+            # Save Attendance
+            attendance = Attendance(subject_id=subject_model, attendance_date=attendance_date, session_year_id=session_year_model)
+            attendance.save()
+            # print("this is attendance", attendance)
+            # Save Attendance Reports
+            for student_id in recognized_students:
+                print("this is student_id", student_id)
+                student = Students.objects.get(admin=student_id)
+                print("this is student", student)
+                print("this is attendance", attendance)
+                attendance_report = AttendanceReport(student_id=student, attendance_id=attendance, status=True)  # Marked Present
+                attendance_report.save()
+            print("Attendance marked successfully!")
+            return JsonResponse({"message": "Attendance marked successfully!"}, status=200)
+
+        except Exception as e:
+            return JsonResponse({"message": str(e)}, status=500)
+
+    return JsonResponse({"message": "Invalid request"}, status=400)
 
 
 def staff_update_attendance(request):

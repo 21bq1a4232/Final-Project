@@ -125,7 +125,7 @@ class Students(models.Model):
     session_year_id = models.ForeignKey(SessionYearModel, null=True, on_delete=models.CASCADE)
     created_at = models.DateTimeField(auto_now_add=True)
     updated_at = models.DateTimeField(auto_now=True)
-    created_by = models.ForeignKey(CustomUser, on_delete=models.DO_NOTHING, related_name='students_created', null=True, blank=True)
+    # created_by = models.ForeignKey(CustomUser, on_delete=models.DO_NOTHING, related_name='students_created', null=True, blank=True)
     objects = models.Manager()
     default_fees = models.IntegerField(default=10000)
     @property
