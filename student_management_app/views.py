@@ -133,7 +133,7 @@ def doRegistration(request):
             existing_faces = FaceEncoding.objects.all()
             for face in existing_faces:
                 existing_encoding = pickle.loads(face.encoding)
-                matches = face_recognition.compare_faces([existing_encoding], face_encodings[0])
+                matches = face_recognition.compare_faces([existing_encoding], face_encodings[0], tolerance=0.1)
                 if True in matches:
                     messages.error(request, 'Face already registered! Please use another face or log in.')
                     return render(request, 'registration.html')
@@ -155,13 +155,13 @@ def doRegistration(request):
 
             # Store Face Encoding
             FaceEncoding.objects.create(user=user, encoding=pickle.dumps(face_encodings[0]))
-
+            print("Registration successful!  Please log in.", user.username)
             messages.success(request, "Registration successful! Please log in.")
             return redirect('login')
 
         except Exception as e:
             print("Error:", e)
-            messages.error(request, f"An error occurred: {str(e)}")
+            messages.error(request, "An error occurred during registration. Please try again.")
             return render(request, 'registration.html')
 
     return render(request, 'registration.html')
