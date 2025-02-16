@@ -15,13 +15,13 @@ from .models import CustomUser, Staffs, Courses, Subjects, Students, SessionYear
 def admin_home(request):
     print("apun sbka baap h")
     print(request.user.user_type)
-    all_student_count = Students.objects.filter(created_by = request.user).count()
-    subject_count = Subjects.objects.filter(created_by = request.user).count()
-    course_count = Courses.objects.filter(created_by = request.user).count()
-    staff_count = Staffs.objects.filter(created_by = request.user).count()
+    all_student_count = Students.objects.all().count()
+    subject_count = Subjects.objects.all().count()
+    course_count = Courses.objects.all().count()
+    staff_count = Staffs.objects.all().count()
 
     # Total Subjects and students in Each Course
-    course_all = Courses.objects.filter(created_by = request.user)
+    course_all = Courses.objects.all()
     course_name_list = []
     subject_count_list = []
     student_count_list_in_course = []
@@ -33,7 +33,7 @@ def admin_home(request):
         subject_count_list.append(subjects)
         student_count_list_in_course.append(students)
     
-    subject_all = Subjects.objects.filter(created_by = request.user)
+    subject_all = Subjects.objects.all()
     subject_list = []
     student_count_list_in_subject = []
     for subject in subject_all:
@@ -47,7 +47,7 @@ def admin_home(request):
     staff_attendance_leave_list=[]
     staff_name_list=[]
 
-    staffs = Staffs.objects.filter(created_by = request.user)
+    staffs = Staffs.objects.all()
     for staff in staffs:
         subject_ids = Subjects.objects.filter(staff_id=staff.admin.id)
         attendance = Attendance.objects.filter(subject_id__in=subject_ids).count()
@@ -61,7 +61,7 @@ def admin_home(request):
     student_attendance_leave_list=[]
     student_name_list=[]
 
-    students = Students.objects.filter(created_by = request.user)
+    students = Students.objects.all()
     for student in students:
         attendance = AttendanceReport.objects.filter(student_id=student.id, status=True).count()
         absent = AttendanceReport.objects.filter(student_id=student.id, status=False).count()
@@ -126,7 +126,7 @@ def add_staff_save(request):
 
 
 def manage_staff(request):
-    staffs = Staffs.objects.filter(created_by = request.user)
+    staffs = Staffs.objects.all()
     context = {
         "staffs": staffs
     }
@@ -211,7 +211,7 @@ def add_course_save(request):
 
 
 def manage_course(request):
-    courses = Courses.objects.filter(created_by = request.user)
+    courses = Courses.objects.all()
     context = {
         "courses": courses
     }
@@ -259,7 +259,7 @@ def delete_course(request, course_id):
 
 
 def manage_session(request):
-    session_years = SessionYearModel.objects.filter(created_by = request.user)
+    session_years = SessionYearModel.objects.all()
     context = {
         "session_years": session_years
     }
@@ -391,7 +391,7 @@ def add_student_save(request):
             return redirect('add_student')
 
 def manage_student(request):
-    students = Students.objects.filter(created_by = request.user)
+    students = Students.objects.all()
     context = {
         "students": students
     }
@@ -484,7 +484,7 @@ def delete_student(request, student_id):
 
 
 def add_subject(request):
-    courses = Courses.objects.filter(created_by = request.user)
+    courses = Courses.objects.all()
     staffs = CustomUser.objects.filter(user_type='2')
     context = {
         "courses": courses,
@@ -518,7 +518,7 @@ def add_subject_save(request):
 
 
 def manage_subject(request):
-    subjects = Subjects.objects.filter(created_by = request.user)
+    subjects = Subjects.objects.all()
     context = {
         "subjects": subjects
     }
@@ -527,7 +527,7 @@ def manage_subject(request):
 
 def edit_subject(request, subject_id):
     subject = Subjects.objects.get(id=subject_id)
-    courses = Courses.objects.filter(created_by = request.user)
+    courses = Courses.objects.all()
     staffs = CustomUser.objects.filter(user_type='2')
     context = {
         "subject": subject,
@@ -602,7 +602,7 @@ def check_username_exist(request):
 
 
 def student_feedback_message(request):
-    feedbacks = FeedBackStudent.objects.filter(created_by = request.user)
+    feedbacks = FeedBackStudent.objects.all()
     context = {
         "feedbacks": feedbacks
     }
@@ -625,7 +625,7 @@ def student_feedback_message_reply(request):
 
 
 def staff_feedback_message(request):
-    feedbacks = FeedBackStaffs.objects.filter(created_by = request.user)
+    feedbacks = FeedBackStaffs.objects.all()
     context = {
         "feedbacks": feedbacks
     }
@@ -648,7 +648,7 @@ def staff_feedback_message_reply(request):
 
 
 def student_leave_view(request):
-    leaves = LeaveReportStudent.objects.filter(created_by = request.user)
+    leaves = LeaveReportStudent.objects.all()
     context = {
         "leaves": leaves
     }
@@ -669,7 +669,7 @@ def student_leave_reject(request, leave_id):
 
 
 def staff_leave_view(request):
-    leaves = LeaveReportStaff.objects.filter(created_by = request.user)
+    leaves = LeaveReportStaff.objects.all()
     context = {
         "leaves": leaves
     }
@@ -691,8 +691,8 @@ def staff_leave_reject(request, leave_id):
 
 
 def admin_view_attendance(request):
-    subjects = Subjects.objects.filter(created_by = request.user)
-    session_years = SessionYearModel.objects.filter(created_by = request.user)
+    subjects = Subjects.objects.all()
+    session_years = SessionYearModel.objects.all()
     context = {
         "subjects": subjects,
         "session_years": session_years
@@ -789,7 +789,7 @@ from .models import FeesStructure, TimeTable
 from .forms import FeesStructureForm, TimeTableForm
 
 def manage_fees(request):
-    fees = FeesStructure.objects.filter(created_by = request.user)
+    fees = FeesStructure.objects.all()
     return render(request, 'hod_template/manage_fees.html', {'fees': fees})
 
 def add_fees(request):
@@ -822,7 +822,7 @@ def delete_fees(request, pk):
     return redirect('manage_fees')
 
 def manage_timetable(request):
-    timetable = TimeTable.objects.filter(created_by = request.user)
+    timetable = TimeTable.objects.all()
     return render(request, 'hod_template/manage_timetable.html', {'timetable': timetable})
 
 def add_timetable(request):
