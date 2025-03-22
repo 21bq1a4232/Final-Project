@@ -1,0 +1,152 @@
+{% extends 'staff_template/base_template.html' %}
+
+{% block page_title %}
+    Bunk Detection
+{% endblock page_title %}
+
+{% block main_content %}
+
+{% load static %}
+
+<section class="content">
+    <div class="container-fluid">
+        <div class="row">
+            <div class="col-md-12">
+                <div class="card card-primary">
+                    <div class="card-header">
+                        <h3 class="card-title">Detect a Bunk</h3>
+                    </div>
+
+                    <!-- Display Messages -->
+                    {% if messages %}
+                    <div class="form-group">
+                        <div class="col-12">
+                            {% for message in messages %}
+                                {% if message.tags == "error" %}
+                                    <div class="alert alert-danger alert-dismissible fade show" role="alert">
+                                        {{ message }}
+                                        <button type="button" class="close" data-dismiss="alert" aria-label="Close">
+                                            <span aria-hidden="true">&times;</span>
+                                        </button>
+                                    </div>
+                                {% elif message.tags == "success" %}
+                                    <div class="alert alert-success alert-dismissible fade show" role="alert">
+                                        {{ message }}
+                                        <button type="button" class="close" data-dismiss="alert" aria-label="Close">
+                                            <span aria-hidden="true">&times;</span>
+                                        </button>
+                                    </div>
+                                {% endif %}
+                            {% endfor %}
+                        </div>
+                    </div>
+                    {% endif %}
+
+                    <div class="card-body text-center">
+                        <video id="video" width="640" height="480" autoplay></video>
+                        <button id="capture" class="btn btn-danger mt-3">Capture</button>
+                        <canvas id="canvas" style="display:none;"></canvas>
+                        <img id="photo" class="mt-3 img-fluid" alt="Captured Image"/>
+                    </div>
+                </div>
+            </div>
+        </div>
+
+        <!-- Bunk Detection History -->
+        <div class="row">
+            <div class="col-md-12">
+                <div class="card card-success">
+                    <div class="card-header">
+                        <h3 class="card-title">Bunk Detection History</h3>
+                    </div>
+
+                    <div class="card-body">
+                        <div class="table-responsive">
+                            <table class="table">
+                                <thead class="thead-light">
+                                <tr>
+                                    <th>#ID</th>
+                                    <th>Student Name</th>
+                                    <th>Detected By</th>
+                                    <th>Detected At</th>
+                                    <th>Captured Image</th>
+                                    <th>Remove this record</th>
+                                </tr>
+                                </thead>
+                                
+                                {% for bunk in bunks %}
+                                <tr>
+                                    <td>{{ bunk.id }}</td>
+                                    <td>{{ bunk.student.admin.username|default:"Unknown" }}</td>
+                                    <td>{{ bunk.staff.admin.username }}</td>
+                                    <td>{{ bunk.detected_at }}</td>
+                                    <td>
+                                        {% if bunk.image %}
+                                            <img src="{{ bunk.image.url }}" width="100" alt="Bunk Image">
+                                        {% else %}
+                                            No Image
+                                        {% endif %}
+                                    </td>
+                                    <td>
+                                        <a href="{% url 'remove_bunk' bunk.id %}" class="btn btn-danger btn-sm">Remove</a>
+                                    </td>
+                                </tr>
+                                {% endfor %}
+                            </table>
+                        </div>
+                    </div>
+                </div>
+            </div>
+        </div>
+
+    </div><!-- /.container-fluid -->
+</section>
+
+{% endblock main_content %}
+
+{% block custom_js %}
+<script>
+document.addEventListener("DOMContentLoaded", function () {
+    const video = document.getElementById("video");
+    const canvas = document.getElementById("canvas");
+    const captureButton = document.getElementById("capture");
+    const photo = document.getElementById("photo");
+
+    navigator.mediaDevices.getUserMedia({ video: true })
+        .then((stream) => {
+            video.srcObject = stream;
+        });
+
+    captureButton.addEventListener("click", () => {
+        canvas.width = video.videoWidth;
+        canvas.height = video.videoHeight;
+        canvas.getContext("2d").drawImage(video, 0, 0, canvas.width, canvas.height);
+        
+        const imageData = canvas.toDataURL("image/jpeg"); // Convert image to Base64
+        photo.src = imageData;
+
+        canvas.toBlob((blob) => {
+    if (!blob) {
+        alert("Failed to capture image.");
+        return;
+    }
+
+    const formData = new FormData();
+    formData.append("image", blob, "bunk_image.jpg");
+
+    console.log("Sending FormData:", formData);  // Debugging
+
+    fetch("{% url 'detect_bunk' %}", {
+        method: "POST",
+        headers: { "X-CSRFToken": "{{ csrf_token }}" },
+        body: formData,
+    })
+    .then(response => response.json())
+    .then(data => console.log("Response:", data))
+    .catch(error => console.error("Error:", error));
+});
+
+    });
+});
+</script>
+{% endblock custom_js %}

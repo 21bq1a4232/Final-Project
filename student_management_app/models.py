@@ -257,7 +257,7 @@ def create_user_profile(sender, instance, created, **kwargs):
         if instance.user_type == 2:
             Staffs.objects.create(admin=instance)
         if instance.user_type == 3:
-            Students.objects.create(admin=instance, course_id=Courses.objects.get(id=1), session_year_id=SessionYearModel.objects.get(id=1), address="", profile_pic="", gender="")
+            Students.objects.create(admin=instance, course_id=Courses.objects.first(), session_year_id=SessionYearModel.objects.first(), address="", profile_pic="", gender="")
     
 
 @receiver(post_save, sender=CustomUser)
@@ -335,3 +335,14 @@ def create_student_fees(sender, instance, created, **kwargs):
         student_fees, created = StudentFees.objects.get_or_create(student=instance)
         student_fees.total_fees = total_fees
         student_fees.save()
+
+
+class BunkDetection(models.Model):
+    id = models.AutoField(primary_key=True)
+    student = models.ForeignKey(Students, on_delete=models.CASCADE, null=True, blank=True)
+    staff = models.ForeignKey(Staffs, on_delete=models.CASCADE)  # The staff who took the photo
+    image = models.ImageField(upload_to='bunk_images/')
+    detected_at = models.DateTimeField(auto_now_add=True)
+
+    def __str__(self):
+        return f"Bunk detected for {self.student.admin.username if self.student else 'Unknown'} by {self.staff.admin.username}"

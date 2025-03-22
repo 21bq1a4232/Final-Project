@@ -17,9 +17,9 @@ Student Home
 				<!-- small box -->
 				<div class="small-box bg-info">
 					<div class="inner">
-						<h3>{{ total_attendance }}</h3>
+						<h3>{{ attendance_percentage }}%</h3>
 						
-						<p>Total Attendance</p>
+						<p>Total Attendance </p>
 					</div>
 					<div class="icon">
 						<i class="ion ion-stats-bars"></i>
@@ -125,7 +125,48 @@ Student Home
 				<!-- /.card -->
 			</div>
 		</div>
-	
+		<div class="row">
+			<div class="col-lg-12">
+				<div class="card card-danger">
+					<div class="card-header">
+						<h3 class="card-title">Bunk History</h3>
+					</div>
+					<div class="card-body">
+						{% if bunk_records %}
+							<table class="table table-bordered">
+								<thead>
+									<tr>
+										<th>#</th>
+										<th>Detected By</th>
+										<th>Date</th>
+										<th>Captured Image</th>
+									</tr>
+								</thead>
+								<tbody>
+									{% for bunk in bunk_records %}
+									<tr>
+										<td>{{ forloop.counter }}</td>
+										<td>{{ bunk.staff.admin.username }}</td>
+										<td>{{ bunk.detected_at }}</td>
+										<td>
+											{% if bunk.image %}
+												<img src="{{ bunk.image.url }}" width="80" height="80" class="rounded">
+											{% else %}
+												No Image
+											{% endif %}
+										</td>
+									</tr>
+									{% endfor %}
+								</tbody>
+							</table>
+						{% else %}
+							<p class="text-center text-danger">No bunk records found.</p>
+						{% endif %}
+					</div>
+				</div>
+			</div>
+		</div>
+		
 	</div><!-- /.container-fluid -->
 </section>
 

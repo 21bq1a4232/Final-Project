@@ -183,6 +183,8 @@ import base64
 def save_attendance_data(request):
     if request.method == "POST":
         try:
+            print("🔵 Attendance request received.")
+
             # Get Data from Request
             data = json.loads(request.body)
             face_data = data.get("face_data")
@@ -190,61 +192,83 @@ def save_attendance_data(request):
             attendance_date = data.get("attendance_date")
             session_year_id = data.get("session_year_id")
 
+            print(f"📅 Attendance Date: {attendance_date}, Subject ID: {subject_id}, Session Year ID: {session_year_id}")
+
             # Decode the Base64 Image
             face_data = face_data.split(',')[1]  # Remove Base64 header
             image_bytes = base64.b64decode(face_data)
             np_arr = np.frombuffer(image_bytes, np.uint8)
             frame = cv2.imdecode(np_arr, cv2.IMREAD_COLOR)
             rgb_frame = cv2.cvtColor(frame, cv2.COLOR_BGR2RGB)
-            # print("this is rgb_frame",rgb_frame)
-            # Detect Faces and Get Encodings
-            face_locations = face_recognition.face_locations(rgb_frame)
-            face_encodings = face_recognition.face_encodings(rgb_frame, face_locations)
 
-            if not face_encodings:
+            # 🔍 Detect Faces and Get Encodings
+            face_locations = face_recognition.face_locations(rgb_frame)
+            if not face_locations:
+                print("❌ No faces detected.")
                 return JsonResponse({"message": "No face detected!"}, status=400)
 
-            # Get all students and their face encodings from DB
-            students = Students.objects.all()
-            recognized_students = []
-            existing_faces = FaceEncoding.objects.all()
-            for face in existing_faces:
-                existing_encoding = pickle.loads(face.encoding)
-                matches = face_recognition.compare_faces([existing_encoding], face_encodings[0], tolerance=0.5)
-                # print("this is matches",matches)
-                for match in matches:
-                    if match:  # If match found
-                        recognized_students.append(face.user.id)
+            face_encodings = face_recognition.face_encodings(rgb_frame, face_locations)
+            if not face_encodings:
+                print("❌ Face encoding failed.")
+                return JsonResponse({"message": "Face encoding failed!"}, status=400)
 
-            # print("this is students",recognized_students)
+            print(f"✅ {len(face_encodings)} face(s) detected.")
+
+            # 🆔 Match Face with Students
+            recognized_students = []
+            for stored_face in FaceEncoding.objects.all():
+                stored_encoding = pickle.loads(stored_face.encoding)
+                match_results = face_recognition.compare_faces([stored_encoding], face_encodings[0], tolerance=0.5)
+                face_distance = face_recognition.face_distance([stored_encoding], face_encodings[0])
+
+                print(f"🔍 Comparing with {stored_face.user.username}: Match={match_results}, Distance={face_distance}")
+
+                if True in match_results:
+                    recognized_students.append(stored_face.user.id)
+
             if not recognized_students:
+                print("❌ Face not recognized.")
                 return JsonResponse({"message": "Face not recognized!"}, status=400)
 
-            # Fetch Subject and Session Year Models
+            print(f"✅ Recognized Students: {recognized_students}")
+
+            # 🎯 Fetch Subject & Session Year
             subject_model = Subjects.objects.get(id=subject_id)
             session_year_model = SessionYearModel.objects.get(id=session_year_id)
-            # print("this is subject_model", subject_model)
-            # print("this is session_year_model", session_year_model)
-            # print("this is attendance_date", attendance_date)
-            # Save Attendance
-            attendance = Attendance(subject_id=subject_model, attendance_date=attendance_date, session_year_id=session_year_model)
-            attendance.save()
-            # print("this is attendance", attendance)
-            # Save Attendance Reports
+
+            # ❗ Prevent Duplicate Attendance for the Same Day
+            existing_attendance = Attendance.objects.filter(subject_id=subject_model, attendance_date=attendance_date, session_year_id=session_year_model).first()
+            if existing_attendance:
+                print("⚠️ Attendance already marked for this subject and date.")
+            else:
+                # Save Attendance Entry
+                existing_attendance = Attendance(subject_id=subject_model, attendance_date=attendance_date, session_year_id=session_year_model)
+                existing_attendance.save()
+                print(f"📝 New attendance entry created: {existing_attendance}")
+
+            # ✅ Save Attendance Reports
             for student_id in recognized_students:
-                print("this is student_id", student_id)
                 student = Students.objects.get(admin=student_id)
-                print("this is student", student)
-                print("this is attendance", attendance)
-                attendance_report = AttendanceReport(student_id=student, attendance_id=attendance, status=True)  # Marked Present
+
+                # Check if attendance already exists for this student
+                existing_report = AttendanceReport.objects.filter(student_id=student, attendance_id=existing_attendance).first()
+                if existing_report:
+                    print(f"⚠️ Attendance already recorded for {student.admin.username}. Skipping.")
+                    continue
+
+                attendance_report = AttendanceReport(student_id=student, attendance_id=existing_attendance, status=True)
                 attendance_report.save()
-            print("Attendance marked successfully!")
+                print(f"✔️ Attendance marked for {student.admin.username}")
+
+            print("✅ Attendance marking completed successfully!")
             return JsonResponse({"message": "Attendance marked successfully!"}, status=200)
 
         except Exception as e:
+            print(f"❌ Error in save_attendance_data: {e}")
             return JsonResponse({"message": str(e)}, status=500)
 
     return JsonResponse({"message": "Invalid request"}, status=400)
+
 
 
 def staff_update_attendance(request):

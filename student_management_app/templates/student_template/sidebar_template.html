@@ -74,7 +74,24 @@
                 </p>
               </a>
             </li>
-
+            <li class="nav-item">
+              {% url 'student_apply_leave' as student_apply_leave %}
+              <a href="{{ student_apply_leave }}" class="nav-link {% if request.path == student_apply_leave %} active {% endif %}">
+                <i class="nav-icon fas fa-envelope-open-text"></i>
+                <p>
+                  Apply for Leave
+                  {% comment %} <span class="right badge badge-danger">New</span> {% endcomment %}
+                </p>
+              </a>
+            </li>
+            <li class="nav-item">
+              {% url 'bunked_classes' as bunked_classes %}
+              <a href="{{ bunked_classes }}" class="nav-link {% if request.path == bunked_classes %} active {% endif %}">
+                <i class="nav-icon fas fa-user-secret"></i>
+                <p>View Bunks</p>
+              </a>
+            </li>
+            
             <li class="nav-item">
               {% url 'student_feedback' as student_feedback %}
               <a href="{{ student_feedback }}" class="nav-link {% if request.path == student_feedback %} active {% endif %}">
@@ -85,18 +102,22 @@
                 </p>
               </a>
             </li>
-            {% if user.is_authenticated %}
-    {% with student_id=user.students.id %} <a href="{% url 'view_fee_details' student_id=student_id %}" class="nav-link">
-        <i class="nav-icon fas fa-money-check-alt"></i>
-        <p>Fee Details</p>
-    </a>
-    {% endwith %}
-{% else %}
-    <a href="#" class="nav-link disabled">
-        <i class="nav-icon fas fa-money-check-alt"></i>
-        <p>Fee Details</p>
-    </a>
-{% endif %}
+            <li class="nav-item">
+              {% if user.is_authenticated %}
+                  {% with student_id=user.students.id %}
+                  <a href="{% url 'view_fee_details' student_id=student_id %}" class="nav-link {% if request.path == student_fee_details %} active {% endif %}">
+                      <i class="nav-icon fas fa-money-check-alt"></i>
+                      <p>Fee Details</p>
+                  </a>
+                  {% endwith %}
+              {% else %}
+                  <a href="#" class="nav-link disabled">
+                      <i class="nav-icon fas fa-money-check-alt"></i>
+                      <p>Fee Details</p>
+                  </a>
+              {% endif %}
+          </li>
+          
         </nav>
         <!-- /.sidebar-menu -->
       </div>

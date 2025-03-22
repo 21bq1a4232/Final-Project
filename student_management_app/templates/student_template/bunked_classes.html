@@ -1,0 +1,65 @@
+{% extends 'student_template/base_template.html' %}
+
+{% block page_title %}
+    View Bunk Records
+{% endblock page_title %}
+
+{% block main_content %}
+{% load static %}
+
+<section class="content">
+    <div class="container-fluid">
+
+        <!-- Page Header -->
+        <div class="row mb-3">
+            <div class="col">
+                <h2 class="text-center">Bunk Records</h2>
+            </div>
+        </div>
+
+        <div class="row">
+            <div class="col-md-12">
+                <div class="card card-danger">
+                    <div class="card-header">
+                        <h3 class="card-title">Your Bunk History</h3>
+                    </div>
+                    <div class="card-body">
+                        {% if bunk_records %}
+                            <table class="table table-bordered table-hover">
+                                <thead class="thead-dark">
+                                    <tr>
+                                        <th>#</th>
+                                        <th>Detected By</th>
+                                        <th>Date & Time</th>
+                                        <th>Captured Image</th>
+                                    </tr>
+                                </thead>
+                                <tbody>
+                                    {% for bunk in bunk_records %}
+                                    <tr>
+                                        <td>{{ forloop.counter }}</td>
+                                        <td>{{ bunk.staff.admin.username }}</td>
+                                        <td>{{ bunk.detected_at }}</td>
+                                        <td>
+                                            {% if bunk.image %}
+                                                <img src="{{ bunk.image.url }}" width="100" height="100" class="rounded img-thumbnail">
+                                            {% else %}
+                                                No Image Available
+                                            {% endif %}
+                                        </td>
+                                    </tr>
+                                    {% endfor %}
+                                </tbody>
+                            </table>
+                        {% else %}
+                            <p class="text-center text-danger">No bunk records found.</p>
+                        {% endif %}
+                    </div>
+                </div>
+            </div>
+        </div>
+
+    </div><!-- /.container-fluid -->
+</section>
+
+{% endblock main_content %}

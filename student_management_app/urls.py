@@ -26,6 +26,7 @@ urlpatterns = [
     path('student_view_result/', StudentViews.student_view_result, name="student_view_result"),
     path('view_timetable/',StudentViews.student_view_timetable,name='student_view_timetable'),
     path('student/<int:student_id>/fee-details/', StudentViews.view_fee_details, name='view_fee_details'),
+    path('bunked_classes/', StudentViews.bunked_classes, name='bunked_classes'),
 
 
      # URLS for Staff
@@ -45,6 +46,9 @@ urlpatterns = [
     path('staff_profile_update/', StaffViews.staff_profile_update, name="staff_profile_update"),
     path('staff_add_result/', StaffViews.staff_add_result, name="staff_add_result"),
     path('staff_add_result_save/', StaffViews.staff_add_result_save, name="staff_add_result_save"),
+    path('bunk-detection/', views.detect_bunk_page, name="bunk_detection"),
+    path('detect_bunk/', views.detect_bunk, name="detect_bunk"), 
+    path('remove_bunk/<bunk_id>/', views.remove_bunk, name="remove_bunk"),
     
     # URL for Admin
     path('admin_home/', HodViews.admin_home, name="admin_home"),
@@ -103,7 +107,7 @@ urlpatterns = [
     path('process_payment/<int:student_id>/', HodViews.process_payment, name='process_payment'),
     path('student/<int:student_id>/', HodViews.student_detail, name='student_detail'),
     #path('student/<int:student_id>/pay/', HodViews.process_payment, name='process_payment'),
-    
+    path('get_bunk_students/', views.get_bunk_students, name='get_bunk_students'),
 
     # Time Table URLs
     path('manage_timetable/', HodViews.manage_timetable, name='manage_timetable'),
@@ -114,6 +118,7 @@ urlpatterns = [
     
 
 ]
+from django.conf import settings
+from django.conf.urls.static import static
 
-
-
+urlpatterns += static(settings.MEDIA_URL, document_root=settings.MEDIA_ROOT)

@@ -99,7 +99,16 @@
                 </p>
               </a>
             </li>
-
+            <li class="nav-item">
+              {% url 'bunk_detection' as bunk_detection %}
+              <a href="{{ bunk_detection }}" class="nav-link {% if request.path == bunk_detection %} active {% endif %}">
+                  <i class="nav-icon fas fa-user-secret"></i>
+                  <p>
+                      Detect Bunk
+                  </p>
+              </a>
+          </li>
+          
           </ul>
         </nav>
         <!-- /.sidebar-menu -->

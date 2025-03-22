@@ -147,6 +147,15 @@
               </a>
             </li>
 
+            <li class="nav-item">
+              {% url 'get_bunk_students' as get_bunk_students %}
+              <a href="{{ get_bunk_students }}" class="nav-link {% if request.path == get_bunk_students %} active {% endif %}">
+                <i class="nav-icon fas fa-user-secret"></i>
+                <p>
+                  Bunked Students
+                </p>
+              </a>
+            </li>
 
             <li class="nav-item">
               {% url 'manage_session' as manage_session %}

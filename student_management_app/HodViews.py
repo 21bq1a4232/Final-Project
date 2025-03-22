@@ -510,6 +510,7 @@ def delete_student(request, student_id):
 def add_subject(request):
     courses = Courses.objects.all()
     staffs = CustomUser.objects.filter(user_type='2')
+    print("thi is is the staff",staffs)
     context = {
         "courses": courses,
         "staffs": staffs

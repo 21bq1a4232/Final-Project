@@ -1,12 +1,8 @@
 from django.shortcuts import render, redirect
-from django.http import HttpResponse, HttpResponseRedirect
 from django.contrib import messages
-from django.core.files.storage import FileSystemStorage #To upload Profile Picture
-# will store media or photos
-from django.urls import reverse
-import datetime # To Parse input DateTime into Python Date Time Object
-from django.db.models import Q
-from .models import CustomUser, Staffs, Courses, Subjects, Students, Attendance, AttendanceReport, LeaveReportStudent, FeedBackStudent, StudentResult
+
+import datetime 
+from .models import BunkDetection, CustomUser,  Courses, Subjects, Students, Attendance, AttendanceReport, LeaveReportStudent, FeedBackStudent, StudentResult
 
 
 def student_home(request):
@@ -17,7 +13,7 @@ def student_home(request):
     total_attendance =   AttendanceReport.objects.filter(student_id=student_obj).count()
     attendance_present = AttendanceReport.objects.filter(student_id=student_obj, status=True).count()
     attendance_absent =  AttendanceReport.objects.filter(student_id=student_obj, status=False).count()
-
+    bunk_records = BunkDetection.objects.filter(student=student).order_by("-detected_at")
     course_obj = Courses.objects.get(id=student_obj.course_id.id)
     total_subjects = Subjects.objects.filter(course_id=course_obj).count()
 
@@ -32,7 +28,9 @@ def student_home(request):
         subject_name.append(subject.subject_name)
         data_present.append(attendance_present_count)
         data_absent.append(attendance_absent_count)
-    
+    attendance_percentage = 0
+    if total_attendance > 0:  # Avoid division by zero
+        attendance_percentage = round((attendance_present / total_attendance) * 100, 2)
     context={
          'student_id': student,
         "total_attendance": total_attendance,
@@ -41,7 +39,9 @@ def student_home(request):
         "total_subjects": total_subjects,
         "subject_name": subject_name,
         "data_present": data_present,
-        "data_absent": data_absent
+        "data_absent": data_absent,
+        "bunk_records": bunk_records,
+        'attendance_percentage': attendance_percentage,
     }
     return render(request, "student_template/student_home_template.html",context)
 
@@ -250,3 +250,13 @@ def view_fee_details(request, student_id):
     }
 
     return render(request, 'student_template/fee_details.html', context)
+
+
+def bunked_classes(request):
+    student = Students.objects.get(admin=request.user)  # Get the logged-in student
+    bunk_records = BunkDetection.objects.filter(student=student).order_by("-detected_at")  # Fetch bunk records
+
+    context = {
+        "bunk_records": bunk_records,
+    }
+    return render(request, "student_template/bunked_classes.html", context)
