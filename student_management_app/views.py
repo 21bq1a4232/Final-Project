@@ -428,3 +428,5 @@ def get_bunk_students(request):
     return render(request, 'hod_template/detect_bunk.html', {'students': students})
 
 
+
+
