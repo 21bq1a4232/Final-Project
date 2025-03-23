@@ -1,11 +1,11 @@
-# Use the official Python image from Docker Hub
+# Use a minimal Python base image
 FROM python:3.10-slim
 
 # Install system dependencies
 RUN apt-get update \
     && apt-get install -y --no-install-recommends \
         build-essential \
-        libmariadb-dev \
+        libpq-dev \
         pkg-config \
     && rm -rf /var/lib/apt/lists/*
 
@@ -18,7 +18,7 @@ WORKDIR /app
 
 # Copy the requirements file and install dependencies
 COPY requirements.txt /app/
-RUN pip install -r requirements.txt
+RUN pip install --no-cache-dir -r requirements.txt
 
 # Copy the entire project to the working directory
 COPY . /app/
@@ -30,4 +30,4 @@ RUN python manage.py collectstatic --noinput
 EXPOSE 8000
 
 # Run the application
-CMD ["gunicorn", "--bind", "0.0.0.0:8000", "College_Management_System.wsgi:application"]
+CMD ["gunicorn", "--bind", "0.0.0.0:8000", "student_management_project.wsgi:application"]
